@@ -14,11 +14,10 @@ eval_iters = 200
 
 torch.manual_seed(1337)
 
-# wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 with open('input.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
-# here are all the unique characters that occur in this text
+# all the unique characters that occur in this text
 chars = sorted(list(set(text)))
 vocab_size = len(chars)
 # create a mapping from characters to integers
@@ -62,12 +61,10 @@ class BigramLanguageModel(nn.Module):
 
     def __init__(self, vocab_size):
         super().__init__()
-        # each token directly reads off the logits for the next token from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, vocab_size)
 
     def forward(self, idx, targets=None):
 
-        # idx and targets are both (B,T) tensor of integers
         logits = self.token_embedding_table(idx) # (B,T,C)
 
         if targets is None:
@@ -81,15 +78,14 @@ class BigramLanguageModel(nn.Module):
         return logits, loss
 
     def generate(self, idx, max_new_tokens):
-        # idx is (B, T) array of indices in the current context
         for _ in range(max_new_tokens):
-            # get the predictions
+            # get predictions
             logits, loss = self(idx)
-            # focus only on the last time step
+            # focus on the last time step
             logits = logits[:, -1, :] # becomes (B, C)
             # apply softmax to get probabilities
             probs = F.softmax(logits, dim=-1) # (B, C)
-            # sample from the distribution
+            # sample from distribution
             idx_next = torch.multinomial(probs, num_samples=1) # (B, 1)
             # append sampled index to the running sequence
             idx = torch.cat((idx, idx_next), dim=1) # (B, T+1)
@@ -103,7 +99,7 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 for iter in range(max_iters):
 
-    # every once in a while evaluate the loss on train and val sets
+    # evaluate the loss on train and val sets
     if iter % eval_interval == 0:
         losses = estimate_loss()
         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
